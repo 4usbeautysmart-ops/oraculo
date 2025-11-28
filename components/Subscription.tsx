@@ -99,6 +99,8 @@ const Subscription: React.FC = () => {
 
       const resultado = await resposta.json();
 
+      console.log("Redirecionando para o checkout:", resultado);
+
       if (resultado.checkoutUrl) {
         window.location.href = resultado.checkoutUrl;
       } else {
