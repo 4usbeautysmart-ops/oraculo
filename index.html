@@ -19,7 +19,7 @@
     <style>
       body {
         font-family: 'Roboto', sans-serif;
-        background-color: #0c0a1a;
+        background-color: #000000;
         color: #e2e8f0;
       }
       .font-cinzel {
@@ -109,9 +109,7 @@
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         z-index: -10;
-        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #4a2a3a);
-        background-size: 400% 400%;
-        animation: cosmic-shift 25s ease infinite;
+        background: #000000;
         opacity: 1;
         transition: opacity 1s ease-in-out;
       }
@@ -128,7 +126,7 @@
         background: transparent;
         background-repeat: repeat;
         animation: animate-stars 150s linear infinite;
-        opacity: 1;
+        opacity: 0;
         transition: opacity 1s ease-in-out;
       }
       #stars1 {
@@ -160,7 +158,6 @@
   }
 }
 </script>
-<script src="/pwa.js"></script>
 <link rel="stylesheet" href="/index.css">
 </head>
   <body>

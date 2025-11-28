@@ -12,7 +12,6 @@ import { askGuardian } from "./services/geminiService";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import { listenToInstallPrompt, triggerInstall } from "./pwa";
 
 interface HistoryEntry {
   id: number;
@@ -243,7 +242,7 @@ const MainOracleInterface: React.FC<{
   const isResponseReceived = !!response && !isLoading;
 
   return (
-    <div className="min-h-screen text-slate-200 transition-colors duration-500">
+    <div className="min-h-screen text-slate-200 transition-colors duration-500 bg-black">
       <main className="container mx-auto px-4 py-8 md:py-16 flex flex-col items-center">
         <Header />
         <OracleFace
@@ -334,18 +333,6 @@ const ProtectedRoute: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
-  const [showInstall, setShowInstall] = useState(false);
-
-  useEffect(() => {
-    listenToInstallPrompt(() => {
-      setShowInstall(true);
-    });
-  }, []);
-
-  const handleInstall = async () => {
-    const result = await triggerInstall();
-    console.log(result);
-  };
 
   const navigate = useNavigate();
 
@@ -429,7 +416,7 @@ function App() {
   // Mostrar loading enquanto verifica autenticação
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-900 via-gray-800 to-black">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-orange-400 text-xl font-cinzel">
           Verificando acesso ao cosmos...
         </div>
@@ -439,11 +426,6 @@ function App() {
 
   return (
     <Routes>
-      {showInstall && (
-        <button id="btn-install" onClick={handleInstall}>
-          Adicionar à Tela de Início
-        </button>
-      )}
       <Route
         path="/login"
         element={
