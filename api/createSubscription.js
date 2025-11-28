@@ -34,7 +34,7 @@ export default async function handler(req, res) {
           currency_id: "BRL",
         },
 
-        back_url: "https://engenharia-de-cortes-5d.vercel.app/",
+        back_url: "https://oraculo-orcin-one.vercel.app/",
         payer_email: userEmail,
       },
     });
