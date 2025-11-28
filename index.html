@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oráculo da Consciência</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #0c0a1a;
+        color: #e2e8f0;
+      }
+      .font-cinzel {
+        font-family: 'Cinzel', serif;
+      }
+      .animate-mystic-glow {
+        animation: mystic-glow 2.5s ease-in-out;
+      }
+
+      @keyframes mystic-glow {
+        0% {
+          box-shadow: 0 0 0px 0px rgba(249, 115, 22, 0);
+        }
+        50% {
+          box-shadow: 0 0 25px 5px rgba(249, 115, 22, 0.4);
+        }
+        100% {
+          box-shadow: 0 0 0px 0px rgba(249, 115, 22, 0);
+        }
+      }
+
+      @keyframes fade-in-scale-up {
+        from { opacity: 0; transform: scale(0.98); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in-scale-up {
+        animation: fade-in-scale-up 0.5s ease-out forwards;
+      }
+
+      @keyframes fade-out-scale-down {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.98); }
+      }
+      .animate-fade-out-scale-down {
+        animation: fade-out-scale-down 0.5s ease-out forwards;
+      }
+
+      @keyframes gradient-glow {
+        0% {
+          box-shadow: 0 0 5px rgba(249, 115, 22, 0.3), 0 0 15px rgba(251, 191, 36, 0.3), 0 0 25px rgba(252, 211, 77, 0.2);
+        }
+        50% {
+          box-shadow: 0 0 20px rgba(249, 115, 22, 0.6), 0 0 35px rgba(251, 191, 36, 0.6), 0 0 50px rgba(252, 211, 77, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 5px rgba(249, 115, 22, 0.3), 0 0 15px rgba(251, 191, 36, 0.3), 0 0 25px rgba(252, 211, 77, 0.2);
+        }
+      }
+      .animate-gradient-glow {
+        animation: gradient-glow 4s ease-in-out infinite;
+      }
+      
+      @keyframes subtle-pulse {
+        0%, 100% {
+          transform: scale(1);
+          opacity: 0.9;
+          filter: brightness(1) drop-shadow(0 0 2px rgba(253, 186, 116, 0.3));
+        }
+        50% {
+          transform: scale(1.02);
+          opacity: 1;
+          filter: brightness(1.1) drop-shadow(0 0 6px rgba(253, 186, 116, 0.5));
+        }
+      }
+      .animate-subtle-pulse {
+        animation: subtle-pulse 6s ease-in-out infinite;
+      }
+
+      @keyframes typing-pulse {
+        0%, 100% {
+          transform: scale(1.01);
+          opacity: 0.95;
+          filter: brightness(1.05) drop-shadow(0 0 4px rgba(234, 88, 12, 0.4));
+        }
+        50% {
+          transform: scale(1.04);
+          opacity: 1;
+          filter: brightness(1.2) drop-shadow(0 0 10px rgba(234, 88, 12, 0.6));
+        }
+      }
+      .animate-typing-pulse {
+        animation: typing-pulse 2s ease-in-out infinite;
+      }
+
+      /* --- COSMIC THEME --- */
+      #cosmic-background {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -10;
+        background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #4a2a3a);
+        background-size: 400% 400%;
+        animation: cosmic-shift 25s ease infinite;
+        opacity: 1;
+        transition: opacity 1s ease-in-out;
+      }
+      @keyframes cosmic-shift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      .stars {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: -9;
+        background: transparent;
+        background-repeat: repeat;
+        animation: animate-stars 150s linear infinite;
+        opacity: 1;
+        transition: opacity 1s ease-in-out;
+      }
+      #stars1 {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Ccircle fill='%23fff' fill-opacity='0.3' cx='2' cy='2' r='1'/%3E%3C/svg%3E");
+        animation-duration: 50s;
+      }
+      #stars2 {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Ccircle fill='%23fff' fill-opacity='0.4' cx='4' cy='4' r='1.5'/%3E%3C/svg%3E");
+        animation-duration: 100s;
+      }
+      #stars3 {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Ccircle fill='%23fff' fill-opacity='0.5' cx='6' cy='6' r='2'/%3E%3C/svg%3E");
+        animation-duration: 150s;
+      }
+      @keyframes animate-stars {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-2000px); }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^6.23.1",
+    "jspdf": "https://aistudiocdn.com/jspdf@^2.5.1"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="cosmic-background"></div>
+    <div id="stars1" class="stars"></div>
+    <div id="stars2" class="stars"></div>
+    <div id="stars3" class="stars"></div>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

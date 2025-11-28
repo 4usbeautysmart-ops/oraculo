@@ -1,0 +1,26 @@
+
+# Node.js dependencies
+node_modules/
+dist/
+.vite/
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+
+# Build output
+*.cache
+*.next
+*.nuxt
+*.out
+build/
+public/build/
