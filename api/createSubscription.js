@@ -13,6 +13,7 @@ export default async function handler(req, res) {
   }
 
   const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+  console.log("🚀 Usando ACCESS_TOKEN:", ACCESS_TOKEN);
 
   if (!ACCESS_TOKEN) {
     return res.status(500).json({ error: "MP_ACCESS_TOKEN não configurado." });
