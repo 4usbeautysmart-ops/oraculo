@@ -12,6 +12,7 @@ import { askGuardian } from "./services/geminiService";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { listenToInstallPrompt, triggerInstall } from "./pwa";
 
 interface HistoryEntry {
   id: number;
@@ -333,6 +334,19 @@ const ProtectedRoute: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [showInstall, setShowInstall] = useState(false);
+
+  useEffect(() => {
+    listenToInstallPrompt(() => {
+      setShowInstall(true);
+    });
+  }, []);
+
+  const handleInstall = async () => {
+    const result = await triggerInstall();
+    console.log(result);
+  };
+
   const navigate = useNavigate();
 
   // Verificar autenticação persistente do Firebase
@@ -425,6 +439,11 @@ function App() {
 
   return (
     <Routes>
+      {showInstall && (
+        <button id="btn-install" onClick={handleInstall}>
+          Adicionar à Tela de Início
+        </button>
+      )}
       <Route
         path="/login"
         element={
