@@ -101,8 +101,8 @@ const Subscription: React.FC = () => {
 
       console.log("Redirecionando para o checkout:", resultado);
 
-      if (resultado.checkoutUrl) {
-        window.location.href = resultado.checkoutUrl;
+      if (resultado.subscriptionUrl) {
+        window.location.href = resultado.subscriptionUrl;
       } else {
         alert("Falha ao gerar o link de pagamento.");
       }
