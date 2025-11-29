@@ -59,36 +59,72 @@ const Subscription: React.FC = () => {
     }
   }, [navigate]);
 
-  // useEffect(() => {
-  //   async function checkSubscriptionOnce() {
-  //     try {
-  //       const loggedInUser = JSON.parse(
-  //         localStorage.getItem("loggedInUser") || "null"
-  //       );
-  //       const userId = loggedInUser?.uid;
-  //       if (!userId) return;
+  // Polling para verificar se o pagamento foi confirmado no Firebase
+  useEffect(() => {
+    const loggedInUser = JSON.parse(
+      localStorage.getItem("loggedInUser") || "null"
+    );
 
-  //       const userRef = doc(db, "users", userId);
-  //       const snap = await getDoc(userRef);
+    if (!loggedInUser?.uid) return;
 
-  //       if (!snap.exists()) return;
+    const pollInterval = setInterval(async () => {
+      try {
+        const userRef = doc(db, "users", loggedInUser.uid);
+        const snap = await getDoc(userRef);
 
-  //       const data = snap.data();
+        if (!snap.exists()) return;
 
-  //       if (data.subscriptionStatus === "active" && data.accessUntil) {
-  //         localStorage.setItem("premium_access", JSON.stringify(true));
-  //         localStorage.setItem("access_until", data.accessUntil);
+        const firebaseData = snap.data();
 
-  //         navigate("/", { replace: true });
-  //         return;
-  //       }
-  //     } catch (e) {
-  //       console.error(e);
-  //     }
-  //   }
+        // Se o pagamento foi confirmado (status "active" com accessUntil válido)
+        if (
+          firebaseData.subscriptionStatus === "active" &&
+          firebaseData.accessUntil &&
+          Date.now() < firebaseData.accessUntil
+        ) {
+          // Atualiza o localStorage com os dados do Firebase
+          const updatedUser = {
+            ...loggedInUser,
+            subscriptionStatus: firebaseData.subscriptionStatus,
+            accessUntil: firebaseData.accessUntil,
+          };
+          localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
 
-  //   checkSubscriptionOnce();
-  // }, []);
+          // Limpa a mensagem de erro e redireciona
+          setPaymentErrorMessage(null);
+          clearInterval(pollInterval);
+          navigate("/", { replace: true });
+          return;
+        }
+
+        // Atualiza o estado do usuário se houver mudanças
+        if (
+          firebaseData.subscriptionStatus !== loggedInUser.subscriptionStatus
+        ) {
+          const updatedUser = {
+            ...loggedInUser,
+            subscriptionStatus: firebaseData.subscriptionStatus,
+            accessUntil: firebaseData.accessUntil,
+          };
+          localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+
+          // Se mudou para um status de erro, mostra a mensagem apropriada
+          if (
+            PAYMENT_FAILURE_STATUSES.includes(firebaseData.subscriptionStatus)
+          ) {
+            setPaymentErrorMessage(
+              "Tentamos cobrar o seu plano, mas não conseguimos autorização. Atualize o método de pagamento para continuar."
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar pagamento:", error);
+      }
+    }, 3000); // Verifica a cada 3 segundos
+
+    return () => clearInterval(pollInterval);
+  }, [navigate]);
 
   const handleStartTrial = async () => {
     const trialEndTime = Date.now() + 24 * 60 * 60 * 1000;
