@@ -59,36 +59,36 @@ const Subscription: React.FC = () => {
     }
   }, [navigate]);
 
-  useEffect(() => {
-    async function checkSubscriptionOnce() {
-      try {
-        const loggedInUser = JSON.parse(
-          localStorage.getItem("loggedInUser") || "null"
-        );
-        const userId = loggedInUser?.uid;
-        if (!userId) return;
+  // useEffect(() => {
+  //   async function checkSubscriptionOnce() {
+  //     try {
+  //       const loggedInUser = JSON.parse(
+  //         localStorage.getItem("loggedInUser") || "null"
+  //       );
+  //       const userId = loggedInUser?.uid;
+  //       if (!userId) return;
 
-        const userRef = doc(db, "users", userId);
-        const snap = await getDoc(userRef);
+  //       const userRef = doc(db, "users", userId);
+  //       const snap = await getDoc(userRef);
 
-        if (!snap.exists()) return;
+  //       if (!snap.exists()) return;
 
-        const data = snap.data();
+  //       const data = snap.data();
 
-        if (data.subscriptionStatus === "active" && data.accessUntil) {
-          localStorage.setItem("premium_access", JSON.stringify(true));
-          localStorage.setItem("access_until", data.accessUntil);
+  //       if (data.subscriptionStatus === "active" && data.accessUntil) {
+  //         localStorage.setItem("premium_access", JSON.stringify(true));
+  //         localStorage.setItem("access_until", data.accessUntil);
 
-          navigate("/", { replace: true });
-          return;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
+  //         navigate("/", { replace: true });
+  //         return;
+  //       }
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   }
 
-    checkSubscriptionOnce();
-  }, []);
+  //   checkSubscriptionOnce();
+  // }, []);
 
   const handleStartTrial = async () => {
     const trialEndTime = Date.now() + 24 * 60 * 60 * 1000;
