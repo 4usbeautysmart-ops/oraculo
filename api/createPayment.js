@@ -8,6 +8,7 @@ export default async function handler(req, res) {
   const { userId, userEmail } = req.body;
 
   const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+  console.log("MP_ACCESS_TOKEN:", ACCESS_TOKEN);
 
   if (!ACCESS_TOKEN) {
     console.log("❌ MP_ACCESS_TOKEN não configurado");
@@ -32,6 +33,10 @@ export default async function handler(req, res) {
         metadata: {
           userId: userId,
           userEmail: userEmail,
+        },
+        payment_methods: {
+          excluded_payment_types: [], // libera PIX, débito, tudo
+          installments: 1, // sem parcelamento
         },
         back_urls: {
           success: "https://oraculo-orcin-one.vercel.app/",
