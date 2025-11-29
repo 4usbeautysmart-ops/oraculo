@@ -55,7 +55,11 @@ export default async function handler(req, res) {
     }
 
     // 🎯 Recupera o userId enviado no metadata
-    const userId = info.metadata?.userId;
+    const userId = info.metadata?.user_id;
+
+    console.log("METADATA ROOT:", info.metadata);
+    console.log("METADATA CHARGES:", info.charges_details?.[0]?.metadata);
+    console.log("USER:", userId);
 
     if (!userId) {
       console.log("❌ Metadata sem userId");
