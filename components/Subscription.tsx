@@ -66,16 +66,36 @@ const Subscription: React.FC = () => {
       localStorage.getItem("loggedInUser") || "null"
     );
 
-    if (!loggedInUser?.uid) return;
+    // Verifica se existe um flag de pagamento pendente (setado antes do redirect)
+    const pendingPayment = JSON.parse(
+      localStorage.getItem("pendingPayment") || "null"
+    );
 
-    // Se o usuário tem accessUntil, significa que pode estar aguardando confirmação
-    if (loggedInUser.accessUntil && Date.now() < loggedInUser.accessUntil) {
+    // Se não há usuário e nem pagamento pendente, não faz polling
+    if (!loggedInUser?.uid && !pendingPayment) return;
+
+    // Se existe pendingPayment válido, ativa o estado de checagem
+    if (
+      pendingPayment &&
+      pendingPayment.until &&
+      Date.now() < pendingPayment.until
+    ) {
       setIsCheckingPayment(true);
+    } else if (
+      pendingPayment &&
+      pendingPayment.until &&
+      Date.now() >= pendingPayment.until
+    ) {
+      // se expirou o pending, remove para evitar ficar verificando indefinidamente
+      localStorage.removeItem("pendingPayment");
     }
 
     const pollInterval = setInterval(async () => {
       try {
-        const userRef = doc(db, "users", loggedInUser.uid);
+        const userId = loggedInUser?.uid || pendingPayment?.userId;
+        if (!userId) return;
+
+        const userRef = doc(db, "users", userId);
         const snap = await getDoc(userRef);
 
         if (!snap.exists()) return;
@@ -90,13 +110,14 @@ const Subscription: React.FC = () => {
         ) {
           // Atualiza o localStorage com os dados do Firebase
           const updatedUser = {
-            ...loggedInUser,
+            ...(loggedInUser || {}),
             subscriptionStatus: firebaseData.subscriptionStatus,
             accessUntil: firebaseData.accessUntil,
           };
           localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
 
-          // Limpa a mensagem de erro e redireciona
+          // Remove flag pending, limpa mensagem e redireciona
+          localStorage.removeItem("pendingPayment");
           setPaymentErrorMessage(null);
           setIsCheckingPayment(false);
           clearInterval(pollInterval);
@@ -104,8 +125,9 @@ const Subscription: React.FC = () => {
           return;
         }
 
-        // Atualiza o estado do usuário se houver mudanças
+        // Se houve mudança de status no Firebase, atualiza o estado local
         if (
+          loggedInUser &&
           firebaseData.subscriptionStatus !== loggedInUser.subscriptionStatus
         ) {
           const updatedUser = {
@@ -192,6 +214,23 @@ const Subscription: React.FC = () => {
       console.log("Redirecionando para o checkout:", resultado);
 
       if (resultado.paymentUrl) {
+        // Marca que o usuário iniciou o fluxo de pagamento (evita mostrar CTA de trial)
+        // Setamos um expiration para evitar flags eternas
+        try {
+          const pending = {
+            userId: user?.uid,
+            until: Date.now() + 10 * 60 * 1000, // 10 minutos
+            startedAt: Date.now(),
+          };
+          localStorage.setItem("pendingPayment", JSON.stringify(pending));
+        } catch (e) {
+          console.warn(
+            "Não foi possível salvar pendingPayment no localStorage",
+            e
+          );
+        }
+
+        // Redireciona para o checkout
         window.location.href = resultado.paymentUrl;
       } else {
         alert("Falha ao gerar o link de pagamento.");
