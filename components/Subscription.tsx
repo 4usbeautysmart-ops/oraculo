@@ -61,12 +61,11 @@ const Subscription: React.FC = () => {
 
   useEffect(() => {
     async function checkSubscriptionOnce() {
-      console.log("Verificando status da assinatura do usuário...");
       try {
         const loggedInUser = JSON.parse(
           localStorage.getItem("loggedInUser") || "null"
         );
-        const userId = loggedInUser?.id;
+        const userId = loggedInUser?.uid;
         if (!userId) return;
 
         const userRef = doc(db, "users", userId);
