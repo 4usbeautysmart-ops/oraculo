@@ -26,7 +26,7 @@ export default async function handler(req, res) {
             id: userId,
             title: "Acesso Mensal - Oráculo da Consciência",
             quantity: 1,
-            unit_price: 1.9,
+            unit_price: 21.9,
           },
         ],
         payer: { email: userEmail },
