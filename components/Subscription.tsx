@@ -90,18 +90,6 @@ const Subscription: React.FC = () => {
     checkSubscriptionOnce();
   }, []);
 
-  useEffect(() => {
-    const onFocus = () => {
-      window.location.reload();
-    };
-
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []);
-
   const handleStartTrial = async () => {
     const trialEndTime = Date.now() + 24 * 60 * 60 * 1000;
     const updatedUser = {
