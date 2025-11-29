@@ -13,6 +13,7 @@ const Subscription: React.FC = () => {
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(
     null
   );
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const PAYMENT_FAILURE_STATUSES = ["canceled", "paused"];
 
   useEffect(() => {
@@ -67,6 +68,11 @@ const Subscription: React.FC = () => {
 
     if (!loggedInUser?.uid) return;
 
+    // Se o usuário tem accessUntil, significa que pode estar aguardando confirmação
+    if (loggedInUser.accessUntil && Date.now() < loggedInUser.accessUntil) {
+      setIsCheckingPayment(true);
+    }
+
     const pollInterval = setInterval(async () => {
       try {
         const userRef = doc(db, "users", loggedInUser.uid);
@@ -92,6 +98,7 @@ const Subscription: React.FC = () => {
 
           // Limpa a mensagem de erro e redireciona
           setPaymentErrorMessage(null);
+          setIsCheckingPayment(false);
           clearInterval(pollInterval);
           navigate("/", { replace: true });
           return;
@@ -108,6 +115,7 @@ const Subscription: React.FC = () => {
           };
           localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
           setUser(updatedUser);
+          setIsCheckingPayment(false);
 
           // Se mudou para um status de erro, mostra a mensagem apropriada
           if (
@@ -196,6 +204,23 @@ const Subscription: React.FC = () => {
   const renderContent = () => {
     if (!user) {
       return <p className="text-center text-gray-400">Carregando...</p>;
+    }
+
+    // Se está verificando o pagamento, mostra tela de aguardo
+    if (isCheckingPayment) {
+      return (
+        <>
+          <p className="text-center text-green-400 mb-6">
+            Confirmando seu pagamento...
+          </p>
+          <p className="text-center text-gray-300 mb-6">
+            Você será redirecionado em breve. Por favor, aguarde.
+          </p>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400"></div>
+          </div>
+        </>
+      );
     }
 
     if (isTrialExpired) {
