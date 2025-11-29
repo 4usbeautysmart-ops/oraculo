@@ -82,7 +82,7 @@ const Subscription: React.FC = () => {
         userEmail: user.email,
       };
 
-      const resposta = await fetch("/api/createSubscription", {
+      const resposta = await fetch("/api/createPayment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,8 +101,8 @@ const Subscription: React.FC = () => {
 
       console.log("Redirecionando para o checkout:", resultado);
 
-      if (resultado.subscriptionUrl) {
-        window.location.href = resultado.subscriptionUrl;
+      if (resultado.paymentUrl) {
+        window.location.href = resultado.paymentUrl;
       } else {
         alert("Falha ao gerar o link de pagamento.");
       }

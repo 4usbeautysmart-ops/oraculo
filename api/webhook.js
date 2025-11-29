@@ -1,6 +1,6 @@
-import { MercadoPagoConfig, PreApproval } from "mercadopago";
+import { MercadoPagoConfig, PreApproval, Payment } from "mercadopago";
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, updateDoc, getDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAS41wXsG-LIXJFKhhbrKmFVlAnBL1vRhU",
@@ -12,64 +12,74 @@ const firebaseConfig = {
 };
 
 if (!getApps().length) initializeApp(firebaseConfig);
-
 const db = getFirestore();
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).end();
+    return res.status(405).json({ error: "Método não permitido" });
   }
 
   try {
-    const { type, data } = req.body;
-
     console.log("📩 Webhook recebido:", req.body);
 
-    // Mercado Pago manda só isso:
-    // { type: "preapproval", data: { id: "PREAPPROVAL_ID" } }
+    const { type, data } = req.body;
 
-    if (type !== "preapproval") {
-      return res.status(200).send("IGNORED");
+    // ⛔ Só processa eventos de pagamento
+    if (type !== "payment") {
+      console.log("Ignorando evento:", type);
+      return res.status(200).json({ status: "ignored" });
     }
 
-    const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
-    const client = new MercadoPagoConfig({ accessToken: ACCESS_TOKEN });
-    const preapproval = new PreApproval(client);
+    const paymentId = data.id;
+    if (!paymentId) {
+      console.log("❌ Webhook sem paymentId");
+      return res.status(400).json({ error: "paymentId ausente" });
+    }
 
-    // 1. Consultar detalhes da assinatura
-    const assinatura = await preapproval.get({ id: data.id });
+    // 🔐 Conecta Mercado Pago
+    const client = new MercadoPagoConfig({
+      accessToken: process.env.MP_ACCESS_TOKEN,
+    });
 
-    console.log("📌 Dados completos:", assinatura);
+    const payment = new Payment(client);
 
-    const userId = assinatura.external_reference;
-    const status = assinatura.status; // authorized / paused / cancelled
+    // 🎯 Busca detalhes do pagamento
+    const info = await payment.get({ id: paymentId });
+
+    console.log("💰 Pagamento consultado:", info);
+
+    // 🟡 Somente processa quando o pagamento for aprovado
+    if (info.status !== "approved") {
+      console.log("Pagamento não aprovado:", info.status);
+      return res.status(200).json({ message: "Pagamento ignorado" });
+    }
+
+    // 🎯 Recupera o userId enviado no metadata
+    const userId = info.metadata?.userId;
 
     if (!userId) {
-      console.log("❌ Nenhum external_reference encontrado!");
-      return res.status(200).send("NO REF");
+      console.log("❌ Metadata sem userId");
+      return res.status(400).json({ error: "userId ausente no metadata" });
     }
 
+    // ⏳ Calcula expiração (30 dias)
+    const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000;
     const ref = doc(db, "users", userId);
+    // 🔥 Salva no Firestore
+    await updateDoc(ref, {
+      subscriptionStatus: "active",
+      paymentId: data.id,
+      accessUntil: expiresAt,
+      updatedAt: Date.now(),
+    });
 
-    // 2. Atualizar Firestore conforme status real
-    if (status === "authorized") {
-      await updateDoc(ref, {
-        subscriptionStatus: "active",
-        preapprovalId: data.id,
-        updatedAt: Date.now(),
-      });
-    }
+    console.log(
+      `✅ Acesso liberado ao usuário ${userId} até ${new Date(expiresAt)}`
+    );
 
-    if (status === "paused" || status === "cancelled") {
-      await updateDoc(ref, {
-        subscriptionStatus: "canceled",
-        updatedAt: Date.now(),
-      });
-    }
-
-    return res.status(200).send("OK");
-  } catch (err) {
-    console.error("❌ Webhook error:", err);
-    return res.status(500).json({ error: true });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("🔥 Erro no webhook:", error);
+    return res.status(500).json({ error: "Erro interno no webhook" });
   }
 }
