@@ -39,7 +39,7 @@ export default async function handler(req, res) {
           installments: 1, // sem parcelamento
         },
         back_urls: {
-          success: "https://oraculo-orcin-one.vercel.app/",
+          success: "https://oraculo-orcin-one.vercel.app/#/subscription",
         },
         auto_return: "approved",
       },

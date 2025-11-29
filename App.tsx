@@ -164,6 +164,7 @@ const MainOracleInterface: React.FC<{
               whatsapp: latestData.whatsapp,
               subscriptionStatus: latestData.subscriptionStatus || "none",
               trialEndsAt: latestData.trialEndsAt || null,
+              accessUntil: latestData.accessUntil || null,
             };
             localStorage.setItem("loggedInUser", JSON.stringify(user));
           }
@@ -188,6 +189,22 @@ const MainOracleInterface: React.FC<{
           state: {
             paymentErrorMessage:
               "Seu período de teste de 24 horas expirou. Assine o plano cósmico para continuar.",
+          },
+        });
+        return;
+      }
+
+      // Verificar se tem assinatura ativa mas o accessUntil expirou
+      if (
+        user.subscriptionStatus === "active" &&
+        user.accessUntil &&
+        Date.now() >= user.accessUntil
+      ) {
+        // Acesso expirado, precisa renovar assinatura
+        navigate("/subscription", {
+          state: {
+            paymentErrorMessage:
+              "Seu acesso expirou. Renove sua assinatura mensal para continuar usando o Oráculo.",
           },
         });
         return;
@@ -302,7 +319,17 @@ const MainOracleInterface: React.FC<{
 const checkSubscriptionStatus = (user: any) => {
   if (!user) return false;
   if (user.email === "admin@jailson.com") return true; // Admin bypass
-  if (user.subscriptionStatus === "active") return true;
+  
+  // Verificar se tem assinatura ativa e se ainda está dentro do prazo
+  if (user.subscriptionStatus === "active") {
+    if (user.accessUntil && Date.now() >= user.accessUntil) {
+      // Acesso expirado, precisa renovar
+      return false;
+    }
+    return true;
+  }
+  
+  // Verificar trial
   if (
     user.subscriptionStatus === "trial" &&
     user.trialEndsAt &&
@@ -310,21 +337,91 @@ const checkSubscriptionStatus = (user: any) => {
   ) {
     return true;
   }
-  // Lógica para expirar o trial (opcional, pode ser feito na pág de sub)
+  
   return false;
 };
 
 const ProtectedRoute: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
-  const user = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+  const [isChecking, setIsChecking] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      let currentUser = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+
+      if (!currentUser) {
+        setIsChecking(false);
+        return;
+      }
+
+      // Buscar dados atualizados do Firestore
+      try {
+        if (auth.currentUser) {
+          const latestSnapshot = await getDoc(
+            doc(db, "users", auth.currentUser.uid)
+          );
+          if (latestSnapshot.exists()) {
+            const latestData = latestSnapshot.data();
+            currentUser = {
+              uid: auth.currentUser.uid,
+              email: auth.currentUser.email,
+              fullName: latestData.fullName,
+              address: latestData.address,
+              whatsapp: latestData.whatsapp,
+              subscriptionStatus: latestData.subscriptionStatus || "none",
+              trialEndsAt: latestData.trialEndsAt || null,
+              accessUntil: latestData.accessUntil || null,
+            };
+            localStorage.setItem("loggedInUser", JSON.stringify(currentUser));
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+      }
+
+      // Verificar se o accessUntil expirou antes de setar o estado
+      if (
+        currentUser &&
+        currentUser.subscriptionStatus === "active" &&
+        currentUser.accessUntil &&
+        Date.now() >= currentUser.accessUntil
+      ) {
+        navigate("/subscription", {
+          state: {
+            paymentErrorMessage:
+              "Seu acesso expirou. Renove sua assinatura mensal para continuar usando o Oráculo.",
+          },
+          replace: true,
+        });
+        return;
+      }
+
+      setUser(currentUser);
+      setIsChecking(false);
+    };
+
+    checkAccess();
+  }, [navigate]);
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-orange-400 text-xl font-cinzel">
+          Verificando acesso ao cosmos...
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   const hasActiveSubscription = checkSubscriptionStatus(user);
 
   if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
+    return <Navigate to="/subscription" replace />;
   }
 
   return <MainOracleInterface onLogout={onLogout} userEmail={user.email} />;
@@ -353,6 +450,7 @@ function App() {
               whatsapp: userData.whatsapp,
               subscriptionStatus: userData.subscriptionStatus || "none",
               trialEndsAt: userData.trialEndsAt || null,
+              accessUntil: userData.accessUntil || null,
             };
             localStorage.setItem("loggedInUser", JSON.stringify(user));
             setIsAuthenticated(true);
@@ -394,6 +492,23 @@ function App() {
   const handleLoginSuccess = useCallback(() => {
     setIsAuthenticated(true);
     const user = JSON.parse(localStorage.getItem("loggedInUser") || "null");
+    
+    // Verificar se o accessUntil expirou
+    if (
+      user &&
+      user.subscriptionStatus === "active" &&
+      user.accessUntil &&
+      Date.now() >= user.accessUntil
+    ) {
+      navigate("/subscription", {
+        state: {
+          paymentErrorMessage:
+            "Seu acesso expirou. Renove sua assinatura mensal para continuar usando o Oráculo.",
+        },
+      });
+      return;
+    }
+    
     if (checkSubscriptionStatus(user)) {
       navigate("/");
     } else {

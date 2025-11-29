@@ -57,6 +57,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           whatsapp: userData.whatsapp,
           subscriptionStatus: userData.subscriptionStatus || "none",
           trialEndsAt: userData.trialEndsAt || null,
+          accessUntil: userData.accessUntil || null,
         };
         localStorage.setItem("loggedInUser", JSON.stringify(user));
         setIsLoading(false);

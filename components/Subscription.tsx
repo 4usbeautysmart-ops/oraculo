@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Header from "./Header";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
 const Subscription: React.FC = () => {
@@ -27,6 +27,8 @@ const Subscription: React.FC = () => {
     );
     if (loggedInUser) {
       setUser(loggedInUser);
+
+      // Verificar se o trial expirou
       if (
         loggedInUser.subscriptionStatus === "trial" &&
         loggedInUser.trialEndsAt &&
@@ -34,6 +36,18 @@ const Subscription: React.FC = () => {
       ) {
         setIsTrialExpired(true);
       }
+
+      // Verificar se o accessUntil expirou para assinaturas ativas
+      if (
+        loggedInUser.subscriptionStatus === "active" &&
+        loggedInUser.accessUntil &&
+        Date.now() >= loggedInUser.accessUntil
+      ) {
+        setPaymentErrorMessage(
+          "Seu acesso expirou. Renove sua assinatura mensal para continuar usando o Oráculo."
+        );
+      }
+
       if (PAYMENT_FAILURE_STATUSES.includes(loggedInUser.subscriptionStatus)) {
         setPaymentErrorMessage(
           "Tentamos cobrar o seu plano, mas não conseguimos autorização. Atualize o método de pagamento para continuar."
@@ -43,6 +57,49 @@ const Subscription: React.FC = () => {
       navigate("/login");
     }
   }, [navigate]);
+
+  useEffect(() => {
+    async function checkSubscriptionOnce() {
+      try {
+        const loggedInUser = JSON.parse(
+          localStorage.getItem("loggedInUser") || "null"
+        );
+        const userId = loggedInUser?.id;
+        if (!userId) return;
+
+        const userRef = doc(db, "users", userId);
+        const snap = await getDoc(userRef);
+
+        if (!snap.exists()) return;
+
+        const data = snap.data();
+
+        if (data.subscriptionStatus === "active" && data.accessUntil) {
+          localStorage.setItem("premium_access", JSON.stringify(true));
+          localStorage.setItem("access_until", data.accessUntil);
+
+          navigate("/app", { replace: true });
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    checkSubscriptionOnce();
+  }, []);
+
+  useEffect(() => {
+    const onFocus = () => {
+      window.location.reload();
+    };
+
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
 
   const handleStartTrial = async () => {
     const trialEndTime = Date.now() + 24 * 60 * 60 * 1000;
@@ -142,6 +199,25 @@ const Subscription: React.FC = () => {
           Você está em seu período de teste. Restam aproximadamente {hoursLeft}h
           e {minutesLeft}m.
         </p>
+      );
+    }
+
+    // Verificar se o accessUntil expirou para assinaturas ativas
+    if (
+      user.subscriptionStatus === "active" &&
+      user.accessUntil &&
+      Date.now() >= user.accessUntil
+    ) {
+      return (
+        <>
+          <p className="text-center text-orange-300 mb-6">
+            Seu acesso expirou.
+          </p>
+          <p className="text-center text-gray-300 mb-6">
+            Para continuar sua jornada e receber a sabedoria do Oráculo, renove
+            sua assinatura mensal.
+          </p>
+        </>
       );
     }
 
