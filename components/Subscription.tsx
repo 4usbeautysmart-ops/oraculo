@@ -9,6 +9,7 @@ const Subscription: React.FC = () => {
   const location = useLocation();
   const [user, setUser] = useState<any>(null);
   const [isTrialExpired, setIsTrialExpired] = useState(false);
+  // const [isFocused, setIsFocused] = useState(false);
   const [paymentErrorMessage, setPaymentErrorMessage] = useState<string | null>(
     null
   );
@@ -60,6 +61,7 @@ const Subscription: React.FC = () => {
 
   useEffect(() => {
     async function checkSubscriptionOnce() {
+      console.log("Verificando status da assinatura do usuário...");
       try {
         const loggedInUser = JSON.parse(
           localStorage.getItem("loggedInUser") || "null"
@@ -78,7 +80,7 @@ const Subscription: React.FC = () => {
           localStorage.setItem("premium_access", JSON.stringify(true));
           localStorage.setItem("access_until", data.accessUntil);
 
-          navigate("/app", { replace: true });
+          navigate("/", { replace: true });
           return;
         }
       } catch (e) {
