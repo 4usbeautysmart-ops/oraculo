@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const { userId, userEmail } = req.body;
 
   if (!userId || !userEmail) {
-    return res.status(400).json({ error: "Dados insuficientes." });
+    return res.status(400).json({ error: "Dados insuficientes. " });
   }
 
   const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
